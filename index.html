@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monte Carlo Pro | Relatório Executivo</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+    
+    <style>
+        :root {
+            /* Paleta Premium (Indigo & Slate) */
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #f1f5f9;
+            
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 40px 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* HEADER PREMIUM */
+        .header {
+            background: var(--bg-card);
+            padding: 24px 32px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .brand h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 10px;
+        }
+        
+        .brand p { margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+
+        .btn-print {
+            background: white; border: 1px solid var(--border);
+            color: var(--text-main); padding: 10px 20px;
+            border-radius: 10px; font-weight: 600; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 8px;
+            cursor: pointer; transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-print:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+        /* GRID LAYOUT */
+        .main-grid { display: grid; grid-template-columns: 40% 60%; gap: 32px; }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            transition: transform 0.3s ease;
+        }
+        
+        .section-title {
+            font-size: 1.1rem; font-weight: 600; color: var(--text-main);
+            margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px;
+        }
+        .section-title i { color: var(--primary); font-size: 1.2rem; }
+
+        /* INPUTS MODERNOS */
+        .input-group { margin-bottom: 15px; }
+        label { 
+            display: block; font-size: 0.8rem; font-weight: 600; 
+            margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        
+        .currency-wrapper { position: relative; }
+        .currency-symbol {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: #94a3b8; font-weight: 600; font-size: 0.9rem;
+            pointer-events: none;
+        }
+        
+        input[type="number"], input[type="text"] {
+            width: 100%; padding: 10px 12px 10px 32px;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            border-radius: 8px;
+            font-size: 0.95rem; color: var(--text-main); font-family: 'Inter', sans-serif; font-weight: 500;
+            transition: all 0.2s;
+        }
+        input[type="text"] { padding-left: 12px; }
+        
+        input:focus {
+            background: white; border-color: var(--primary); outline: none;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        input.error { border-color: var(--danger); background: #fef2f2; }
+
+        /* CARDS DE ORÇAMENTO */
+        .budget-card {
+            background: linear-gradient(to bottom right, #f8fafc, #f1f5f9);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .total-display {
+            margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .total-label { font-weight: 600; color: var(--primary); font-size: 0.9rem; }
+        .total-value { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+
+        /* BARRA DE FERRAMENTAS */
+        .toolbar {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 8px 12px; margin: 15px 0 10px 0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .btn-icon-text {
+            background: transparent; border: 1px solid transparent;
+            color: var(--text-muted); padding: 6px 10px; border-radius: 6px;
+            font-size: 0.8rem; font-weight: 500; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s;
+        }
+        .btn-icon-text:hover { background: var(--bg-input); color: var(--text-main); }
+        .btn-icon-text.danger:hover { background: #fef2f2; color: var(--danger); }
+
+        /* TABELA COMPACTA */
+        .table-container { 
+            border: 1px solid var(--border); border-radius: 12px; overflow: hidden; 
+            margin-bottom: 15px;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        
+        th {
+            background: #f8fafc; text-align: left; padding: 10px 12px;
+            font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;
+            border-bottom: 1px solid var(--border); cursor: pointer; user-select: none;
+        }
+        th:hover { background: #e2e8f0; color: var(--primary); }
+        
+        td { padding: 4px; border-bottom: 1px solid var(--border); background: white; }
+        
+        /* Inputs super compactos e fonte menor na tabela */
+        td input { 
+            padding: 5px 8px; 
+            font-size: 0.75rem; 
+            background: transparent; border-color: transparent; border-radius: 4px;
+        }
+        td input:hover { background: var(--bg-input); }
+        td input:focus { background: white; border-color: var(--primary); }
+        td .currency-input input { padding-left: 20px; }
+        td .currency-wrapper .currency-symbol { left: 6px; font-size: 0.7rem; }
+
+        .btn-row-action {
+            width: 24px; height: 24px; border-radius: 4px; border: none; background: transparent;
+            color: #cbd5e1; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+        .btn-row-action:hover { color: var(--danger); background: #fef2f2; }
+
+        .btn-add {
+            width: 100%; padding: 12px; border: 2px dashed var(--border);
+            background: transparent; color: var(--text-muted); font-weight: 600; font-size: 0.9rem;
+            border-radius: 10px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; gap: 8px;
+        }
+        .btn-add:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+        .btn-primary {
+            width: 100%; padding: 14px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            color: white; font-size: 1rem; font-weight: 600;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); margin-top: 20px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4); }
+
+        /* RESULTADOS */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+            text-align: center; position: relative; overflow: hidden;
+        }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--border); }
+        .stat-card.success::before { background: var(--success); }
+        .stat-card.warning::before { background: var(--warning); }
+        .stat-card.info::before { background: var(--primary); }
+
+        .stat-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+        .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+        .stat-desc { font-size: 0.75rem; color: #94a3b8; line-height: 1.3; }
+
+        .chart-box {
+            background: white; border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 32px;
+        }
+        .chart-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 15px;}
+        .chart-explanation {
+            margin-top: 12px; padding: 12px; background: var(--bg-body); border-radius: 8px;
+            font-size: 0.8rem; color: var(--text-muted); border-left: 3px solid var(--primary);
+        }
+
+        /* TORNADO FILTERS */
+        .filter-group { background: var(--bg-input); padding: 4px; border-radius: 8px; display: flex; gap: 4px; float: right; }
+        .btn-filter {
+            background: transparent; border: none; padding: 4px 10px; font-size: 0.75rem; font-weight: 600;
+            color: var(--text-muted); cursor: pointer; border-radius: 6px;
+        }
+        .btn-filter.active { background: white; color: var(--primary); box-shadow: var(--shadow-sm); }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999;
+            display: none; justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: white; width: 400px; padding: 32px; border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .modal-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 20px; color: var(--text-main); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+        .btn-secondary { background: var(--bg-input); color: var(--text-muted); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-confirm { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; text-align: center; gap: 20px; }
+        }
+
+        /* --- ESTILOS DE IMPRESSÃO --- */
+        @media print {
+            @page { margin: 1.0cm; size: A4; }
+            body { background: white; padding: 0; font-size: 11pt; color: black; }
+            .container { max-width: 100%; width: 100%; margin: 0; }
+            
+            /* Esconde elementos */
+            .no-print, .btn-add, .btn-primary, .toolbar, .btn-print, .btn-row-action, .filter-group { display: none !important; }
+            
+            /* Limpeza visual */
+            .card, .header, .chart-box { 
+                box-shadow: none !important; 
+                border: none !important; 
+                padding: 0 !important; 
+                margin-bottom: 20px !important;
+                background: white !important;
+            }
+            .header { border-bottom: 2px solid #000 !important; padding-bottom: 10px !important; margin-bottom: 20px !important; }
+            .main-grid { display: block !important; }
+
+            /* Inputs na impressão */
+            input { background: transparent !important; border: none !important; padding: 0 !important; font-weight: 600; color: black !important; }
+            .currency-symbol { position: static; margin-right: 2px; color: black !important; }
+            .currency-wrapper input { padding-left: 0 !important; display: inline; width: auto; }
+            .budget-card { border: 1px solid #000 !important; background: none !important; }
+
+            /* Quebras de Página */
+            #results-section { page-break-before: always; margin-top: 30px; }
+            #tornado-container { page-break-before: always; margin-top: 30px; }
+
+            /* Stats Grid Print */
+            .stats-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 10px !important; }
+            .stat-card { border: 1px solid #000 !important; box-shadow: none !important; }
+            .stat-card::before { display: none !important; }
+
+            /* --- CORREÇÃO DA LARGURA DAS COLUNAS (TABELA PDF) --- */
+            table {
+                table-layout: fixed !important;
+                width: 100% !important;
+            }
+
+            th:nth-child(1), td:nth-child(1) {
+                width: 55% !important;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            th:nth-child(2), td:nth-child(2),
+            th:nth-child(3), td:nth-child(3),
+            th:nth-child(4), td:nth-child(4) {
+                width: 15% !important;
+            }
+            
+            th { border-bottom: 1px solid #000 !important; color: black !important; padding: 5px 0 !important; font-size: 9pt; }
+            td { border-bottom: 1px solid #ddd !important; padding: 5px 0 !important; font-size: 9pt; }
+            
+            canvas { max-height: 400px !important; width: 100% !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <header class="header">
+        <div class="brand">
+            <h1><i class="ph-fill ph-chart-polar"></i> Monte Carlo Pro</h1>
+            <p>Relatório de Análise Estocástica & Riscos Financeiros</p>
+        </div>
+        <button class="btn-print" onclick="window.print()">
+            <i class="ph-bold ph-printer"></i> Imprimir PDF
+        </button>
+    </header>
+
+    <div class="main-grid">
+        
+        <div class="card">
+            <h3 class="section-title"><i class="ph-duotone ph-sliders"></i> Parâmetros do Projeto</h3>
+            
+            <div class="budget-card">
+                <div class="input-group">
+                    <label>Custo Base (Meta)</label>
+                    <div class="currency-wrapper">
+                        <span class="currency-symbol">R$</span>
+                        <input type="number" id="baseCost" value="5481.00" step="0.01">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Reserva de Contingência (VME)</label>
+                    <div class="currency-wrapper" style="margin-top: 8px;">
+                        <span class="currency-symbol">R$</span>
+                        <input type="number" id="reserveValue" value="4050.00" step="0.01">
+                    </div>
+                </div>
+
+                <div class="total-display">
+                    <span class="total-label">ORÇAMENTO TOTAL (LIMITE)</span>
+                    <span class="total-value" id="displayTotalBudget">R$ 9.531,00</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Iterações (Simulações)</label>
+                <input type="number" id="simulations" value="5000">
+            </div>
+
+            <h3 class="section-title" style="margin-top: 30px;"><i class="ph-duotone ph-list-numbers"></i> Itens de Custo</h3>
+            
+            <div class="toolbar">
+                <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">BASE DE DADOS</span>
+                <div style="display:flex; gap:8px;">
+                    <input type="file" id="csvInput" accept=".csv" style="display: none;" onchange="importCSV(this)">
+                    <button class="btn-icon-text" onclick="document.getElementById('csvInput').click()">
+                        <i class="ph-bold ph-upload-simple"></i> Importar
+                    </button>
+                    <button class="btn-icon-text" onclick="openExportModal()">
+                        <i class="ph-bold ph-download-simple"></i> Exportar
+                    </button>
+                    <button class="btn-icon-text danger" onclick="clearTable()">
+                        <i class="ph-bold ph-trash"></i> Limpar
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="taskTable">
+                    <thead>
+                        <tr>
+                            <th width="40%" onclick="sortTable('name')" id="th-name">Item <i class="ph-bold ph-caret-up-down"></i></th>
+                            <th width="18%" onclick="sortTable('opt')" id="th-opt">Otimista <i class="ph-bold ph-caret-up-down"></i></th>
+                            <th width="18%" onclick="sortTable('ml')" id="th-ml">Provável <i class="ph-bold ph-caret-up-down"></i></th>
+                            <th width="18%" onclick="sortTable('pes')" id="th-pes">Pessimista <i class="ph-bold ph-caret-up-down"></i></th>
+                            <th width="6%" class="no-print"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <button class="btn-add" onclick="addNewRow()">
+                <i class="ph-bold ph-plus"></i> Adicionar Item
+            </button>
+
+            <button class="btn-primary" onclick="runSimulation()">
+                <i class="ph-bold ph-play"></i> Rodar Simulação Monte Carlo
+            </button>
+        </div>
+
+        <div class="card" id="results-section">
+            <h3 class="section-title"><i class="ph-duotone ph-chart-pie-slice"></i> Resultados da Simulação</h3>
+            
+            <div class="stats-grid">
+                <div class="stat-card warning">
+                    <div class="stat-label">Prob. Meta (Base)</div>
+                    <div id="probMeta" class="stat-value">-</div>
+                    <div class="stat-desc">Chance de sucesso sem reserva.</div>
+                </div>
+                
+                <div class="stat-card success">
+                    <div class="stat-label">Prob. Limite Total</div>
+                    <div id="probTotal" class="stat-value">-</div>
+                    <div class="stat-desc">Chance de sucesso com reserva.</div>
+                </div>
+
+                <div class="stat-card info">
+                    <div class="stat-label">Otimista (P10)</div>
+                    <div id="p10" class="stat-value">-</div>
+                    <div class="stat-desc">10% chance de custar menos.</div>
+                </div>
+
+                <div class="stat-card info">
+                    <div class="stat-label">Pessimista (P90)</div>
+                    <div id="p90" class="stat-value">-</div>
+                    <div class="stat-desc">90% chance de custar menos.</div>
+                </div>
+
+                <div class="stat-card info" style="grid-column: span 2;">
+                    <div class="stat-label">Custo Médio Esperado</div>
+                    <div id="simMean" class="stat-value">-</div>
+                    <div class="stat-desc">Média ponderada de 5000 cenários.</div>
+                </div>
+            </div>
+
+            <div class="chart-box">
+                <div class="chart-title">Histograma de Frequência</div>
+                <div style="height: 280px; width: 100%;">
+                    <canvas id="histogramChart"></canvas>
+                </div>
+                <div class="chart-explanation">
+                    <strong>Análise:</strong> Distribuição de probabilidade dos custos.
+                    <span style="color:#f59e0b">■ Meta</span> | <span style="color:#ef4444">■ Limite</span>.
+                </div>
+            </div>
+
+            <div class="chart-box" id="tornado-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div class="chart-title">Análise de Sensibilidade (Risco)</div>
+                    <div class="filter-group tornado-controls" id="tornadoControls" style="display:none;">
+                        <button class="btn-filter active" onclick="setTornadoFilter('all', this)">Todos</button>
+                        <button class="btn-filter" id="btnTop10" onclick="setTornadoFilter(10, this)">Top 10</button>
+                        <button class="btn-filter" id="btnTop5" onclick="setTornadoFilter(5, this)">Top 5</button>
+                    </div>
+                </div>
+                <div style="height: 350px; width: 100%;">
+                    <canvas id="tornadoChart"></canvas>
+                </div>
+                <div class="chart-explanation">
+                    <strong>Interpretação:</strong> Itens com barras maiores possuem maior incerteza (volatilidade) e impactam mais o risco final do projeto.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="exportModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-title">Exportar Dados CSV</div>
+        <div class="input-group">
+            <label>Nome do Arquivo:</label>
+            <input type="text" id="exportFileName" value="monte_carlo_data" placeholder="nome_do_arquivo">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeExportModal()">Cancelar</button>
+            <button class="btn-confirm" onclick="confirmExport()">Baixar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configurações do Chart.js
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#64748b';
+    
+    let histogramInstance = null;
+    let tornadoInstance = null;
+    let currentSort = { column: null, direction: 'asc' };
+    let lastTornadoData = [];
+    let currentTornadoFilter = 'all';
+
+    const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    // Validação
+    function validateRow(row) {
+        const opt = parseFloat(row.querySelector('.opt').value) || 0;
+        const ml = parseFloat(row.querySelector('.ml').value) || 0;
+        const pes = parseFloat(row.querySelector('.pes').value) || 0;
+        const inputs = row.querySelectorAll('input');
+        if (pes < ml || ml < opt || pes < opt) { inputs.forEach(i => i.classList.add('error')); } 
+        else { inputs.forEach(i => i.classList.remove('error')); }
+    }
+
+    // Modal
+    function openExportModal() { document.getElementById('exportModal').style.display = 'flex'; document.getElementById('exportFileName').focus(); }
+    function closeExportModal() { document.getElementById('exportModal').style.display = 'none'; }
+    function confirmExport() {
+        let fileName = document.getElementById('exportFileName').value || "monte_carlo";
+        if (!fileName.endsWith('.csv')) fileName += '.csv';
+        exportCSV(fileName);
+        closeExportModal();
+    }
+
+    // Tabela
+    function createRowHTML(name = "", opt = 0, ml = 0, pes = 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" placeholder="Item" value="${name}"></td>
+            <td><div class="currency-wrapper"><span class="currency-symbol">R$</span><input type="number" value="${opt}" class="opt" step="0.01" oninput="validateRow(this.closest('tr'))"></div></td>
+            <td><div class="currency-wrapper"><span class="currency-symbol">R$</span><input type="number" value="${ml}" class="ml" step="0.01" oninput="validateRow(this.closest('tr'))"></div></td>
+            <td><div class="currency-wrapper"><span class="currency-symbol">R$</span><input type="number" value="${pes}" class="pes" step="0.01" oninput="validateRow(this.closest('tr'))"></div></td>
+            <td class="no-print"><button class="btn-row-action" onclick="removeRow(this)"><i class="ph-bold ph-x"></i></button></td>
+        `;
+        return tr;
+    }
+    
+    function addNewRow() { document.querySelector('#taskTable tbody').appendChild(createRowHTML()); }
+    function addSpecificRow(name, opt, ml, pes) { 
+        const row = createRowHTML(name, opt, ml, pes);
+        document.querySelector('#taskTable tbody').appendChild(row);
+        validateRow(row); 
+    }
+    function removeRow(btn) {
+        const tbody = document.querySelector('#taskTable tbody');
+        if(tbody.rows.length > 1) tbody.removeChild(btn.parentNode.parentNode);
+        else alert("Mantenha pelo menos um item.");
+    }
+    function clearTable() {
+        if(confirm("Limpar tudo?")) {
+            document.querySelector('#taskTable tbody').innerHTML = '';
+            addNewRow();
+        }
+    }
+
+    // Ordenação
+    function sortTable(column) {
+        const rows = document.querySelectorAll('#taskTable tbody tr');
+        let data = [];
+        rows.forEach(row => {
+            data.push({
+                name: row.querySelector('input[type="text"]').value,
+                opt: parseFloat(row.querySelector('.opt').value) || 0,
+                ml: parseFloat(row.querySelector('.ml').value) || 0,
+                pes: parseFloat(row.querySelector('.pes').value) || 0
+            });
+        });
+        
+        if (currentSort.column === column) currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        else { currentSort.column = column; currentSort.direction = 'asc'; }
+        
+        data.sort((a, b) => {
+            let valA = a[column], valB = b[column];
+            if (column === 'name') return currentSort.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+        });
+        
+        document.querySelector('#taskTable tbody').innerHTML = '';
+        data.forEach(item => addSpecificRow(item.name, item.opt, item.ml, item.pes));
+    }
+
+    // Simulação e CSV
+    const inputBase = document.getElementById('baseCost');
+    const inputReserve = document.getElementById('reserveValue');
+    const displayTotal = document.getElementById('displayTotalBudget');
+
+    function updateTotalDisplay() {
+        const base = parseFloat(inputBase.value) || 0;
+        const res = parseFloat(inputReserve.value) || 0;
+        displayTotal.innerText = formatter.format(base + res);
+    }
+    inputBase.addEventListener('input', updateTotalDisplay);
+    inputReserve.addEventListener('input', updateTotalDisplay);
+
+    function exportCSV(fileName) {
+        const rows = document.querySelectorAll('#taskTable tbody tr');
+        let csvContent = "data:text/csv;charset=utf-8,Item;Otimista;Provavel;Pessimista\n";
+        rows.forEach(row => {
+            const name = row.querySelector('input[type="text"]').value.replace(/;/g, ",");
+            csvContent += `${name};${row.querySelector('.opt').value};${row.querySelector('.ml').value};${row.querySelector('.pes').value}\n`;
+        });
+        const link = document.createElement("a");
+        link.href = encodeURI(csvContent);
+        link.download = fileName;
+        link.click();
+    }
+    
+    function importCSV(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const lines = e.target.result.split("\n");
+            document.querySelector('#taskTable tbody').innerHTML = '';
+            let loadedCount = 0;
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === "") continue;
+                let cols = lines[i].split(";");
+                if (cols.length < 4) cols = lines[i].split(",");
+                if (cols.length >= 4) {
+                    addSpecificRow(cols[0].trim(), parseFloat(cols[1]), parseFloat(cols[2]), parseFloat(cols[3]));
+                    loadedCount++;
+                }
+            }
+            if (loadedCount === 0) addNewRow();
+        };
+        reader.readAsText(file);
+        input.value = '';
+    }
+
+    function pertDistribution(min, mode, max) {
+        const mean = (min + 4 * mode + max) / 6;
+        const stdDev = (max - min) / 6;
+        let u = 0, v = 0;
+        while(u === 0) u = Math.random(); 
+        while(v === 0) v = Math.random();
+        const z = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+        let result = mean + (z * stdDev);
+        if (result < min) result = min;
+        if (result > max) result = max;
+        return result;
+    }
+
+    function runSimulation() {
+        const baseCost = parseFloat(document.getElementById('baseCost').value) || 0;
+        const reserve = parseFloat(document.getElementById('reserveValue').value) || 0;
+        const totalTarget = baseCost + reserve;
+        const numSims = parseInt(document.getElementById('simulations').value) || 1000;
+        
+        const rows = document.querySelectorAll('#taskTable tbody tr');
+        let items = [], tornadoData = [], hasError = false;
+        
+        rows.forEach(row => {
+            const name = row.querySelector('input[type="text"]').value || "Item";
+            const opt = parseFloat(row.querySelector('.opt').value) || 0;
+            const ml = parseFloat(row.querySelector('.ml').value) || 0;
+            const pes = parseFloat(row.querySelector('.pes').value) || 0;
+            if(pes < ml || ml < opt || pes < opt) { hasError = true; validateRow(row); } 
+            else { items.push({ min: opt, mode: ml, max: pes }); tornadoData.push({ name: name, spread: pes - opt }); }
+        });
+
+        if (hasError) { alert("Corrija os erros na tabela."); return; }
+        if (items.length === 0) return;
+
+        let results = [], successMetaCount = 0, successTotalCount = 0;
+        for (let i = 0; i < numSims; i++) {
+            let projectTotal = 0;
+            items.forEach(item => projectTotal += pertDistribution(item.min, item.mode, item.max));
+            results.push(projectTotal);
+            if (projectTotal <= baseCost) successMetaCount++;
+            if (projectTotal <= totalTarget) successTotalCount++;
+        }
+        results.sort((a, b) => a - b);
+        
+        const mean = results.reduce((a,b) => a+b, 0) / numSims;
+        const p10 = results[Math.floor(numSims * 0.1)];
+        const p90 = results[Math.floor(numSims * 0.9)];
+        
+        document.getElementById('probMeta').innerText = ((successMetaCount / numSims) * 100).toFixed(1) + '%';
+        document.getElementById('probTotal').innerText = ((successTotalCount / numSims) * 100).toFixed(1) + '%';
+        document.getElementById('simMean').innerText = formatter.format(mean);
+        document.getElementById('p10').innerText = formatter.format(p10);
+        document.getElementById('p90').innerText = formatter.format(p90);
+        
+        updateHistogram(results, baseCost, totalTarget);
+        
+        lastTornadoData = tornadoData;
+        updateTornado(lastTornadoData);
+        updateTornadoControls(lastTornadoData.length);
+    }
+
+    function updateHistogram(data, baseCost, totalTarget) {
+        const ctx = document.getElementById('histogramChart').getContext('2d');
+        const binCount = 45;
+        const minVal = data[0], maxVal = data[data.length - 1], step = (maxVal - minVal) / binCount;
+        let bins = new Array(binCount).fill(0), labels = [];
+        for(let i = 0; i < binCount; i++) labels.push(minVal + (i * step)); 
+        data.forEach(val => {
+            let index = Math.floor((val - minVal) / step);
+            if (index >= binCount) index = binCount - 1;
+            bins[index]++;
+        });
+
+        if (histogramInstance) histogramInstance.destroy();
+        
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(79, 70, 229, 0.7)');
+        gradient.addColorStop(1, 'rgba(79, 70, 229, 0.1)');
+
+        histogramInstance = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ label: 'Frequência', data: bins, backgroundColor: gradient, borderColor: '#4f46e5', borderWidth: 1, barPercentage: 0.95, categoryPercentage: 1.0 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { 
+                    x: { grid: {display: false}, ticks: { font: {size: 10}, callback: function(val, idx) { return idx % 6 === 0 ? (this.getLabelForValue(val)/1000).toFixed(0)+'k' : ''; } } }, 
+                    y: { display: false } 
+                },
+                plugins: { legend: { display: false }, annotation: { annotations: {
+                    lineMeta: { 
+                        type: 'line', xMin: labels.findIndex(l => l >= baseCost), xMax: labels.findIndex(l => l >= baseCost), 
+                        borderColor: '#f59e0b', borderWidth: 2, borderDash: [6, 4],
+                        label: { content: "Meta Base", enabled: true, position: "start", font: {size: 10}, color: '#fff', backgroundColor: '#f59e0b' }
+                    },
+                    lineLimit: { 
+                        type: 'line', xMin: labels.findIndex(l => l >= totalTarget), xMax: labels.findIndex(l => l >= totalTarget), 
+                        borderColor: '#ef4444', borderWidth: 2,
+                        label: { content: "Limite Total", enabled: true, position: "start", yAdjust: 20, font: {size: 10}, color: '#fff', backgroundColor: '#ef4444' }
+                    }
+                }}}
+            }
+        });
+    }
+
+    function updateTornadoControls(totalItems) {
+        const controls = document.getElementById('tornadoControls');
+        const btnTop5 = document.getElementById('btnTop5');
+        const btnTop10 = document.getElementById('btnTop10');
+        if (totalItems > 5) {
+            controls.style.display = 'flex';
+            btnTop5.style.display = 'block';
+            btnTop10.style.display = totalItems > 10 ? 'block' : 'none';
+        } else { controls.style.display = 'none'; }
+    }
+
+    function setTornadoFilter(filter, btn) {
+        currentTornadoFilter = filter;
+        document.querySelectorAll('.tornado-controls .btn-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateTornado(lastTornadoData);
+    }
+
+    function updateTornado(data) {
+        data.sort((a, b) => b.spread - a.spread);
+        let filteredData = [...data];
+        if (currentTornadoFilter === 5) filteredData = filteredData.slice(0, 5);
+        if (currentTornadoFilter === 10) filteredData = filteredData.slice(0, 10);
+        const labels = filteredData.map(d => d.name), values = filteredData.map(d => d.spread);
+        const ctx = document.getElementById('tornadoChart').getContext('2d');
+        if (tornadoInstance) tornadoInstance.destroy();
+        tornadoInstance = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: labels, datasets: [{ data: values, backgroundColor: values.map((v, i) => i === 0 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(79, 70, 229, 0.6)'), borderColor: values.map((v, i) => i === 0 ? '#ef4444' : '#4f46e5'), borderWidth: 1, borderRadius: 4 }] },
+            options: { 
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false, 
+                scales: { x: { beginAtZero: true, grid: { borderDash: [2, 2] } }, y: { grid: {display: false} } }, 
+                plugins: { legend: { display: false } } 
+            }
+        });
+    }
+
+    // Inicialização com os Novos Dados
+    addSpecificRow("Conteúdo didático simplificado (slides, fichas)", 150.00, 300.00, 600.00);
+    addSpecificRow("Instrutores/facilitadores de segurança", 120.00, 240.00, 450.00);
+    addSpecificRow("Registro de participação (papel)", 30.00, 60.00, 120.00);
+    addSpecificRow("Instrutores especializados (3 pessoas por 8 horas)", 720.00, 1080.00, 1800.00);
+    addSpecificRow("Ferramentas corretas (chaves, travas, equipamentos)", 200.00, 450.00, 900.00);
+    addSpecificRow("Equipamentos de apoio (bancadas, peças de teste, EPI)", 350.00, 700.00, 1500.00);
+    addSpecificRow("Checklist de avaliação", 50.00, 150.00, 300.00);
+    addSpecificRow("Sistema de pontuação (planilha/quadro/software simples)", 0.00, 150.00, 500.00);
+    addSpecificRow("Reconhecimento simbólico (medalhas, certificados, brindes)", 200.00, 600.00, 1500.00);
+    addSpecificRow("Comunicação interna (cartazes, murais, mensagens digitais)", 100.00, 350.00, 800.00);
+    addSpecificRow("Equipe de organização (3 pessoas em 4 horas de trabalho)", 480.00, 960.00, 1800.00);
+    addSpecificRow("Design gráfico dos cartazes (1 pessoa por 4 horas de trabalho)", 48.00, 60.00, 78.00);
+    addSpecificRow("Impressão em formato A3 (100 impressões. R$ 1,20 a unidade)", 96.00, 120.00, 156.00);
+    addSpecificRow("Suportes de fixação (fita dupla face)", 8.80, 11.00, 14.30);
+    addSpecificRow("Sistema de rodízio (planilha ou software)", 60.00, 75.00, 90.00);
+    addSpecificRow("Checklists de inspeção manual/visual (impressão)", 70.00, 90.00, 120.00);
+    addSpecificRow("Treinamento rápido para operadores (1 pessoa por 4 horas)", 60.00, 85.00, 110.00);
+    
+    updateTotalDisplay();
+</script>
+</body>
+</html>
