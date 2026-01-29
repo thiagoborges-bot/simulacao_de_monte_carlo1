@@ -461,6 +461,16 @@
                 </div>
             </div>
 
+            <div class="chart-box">
+                <div class="chart-title">Curva S (Probabilidade Acumulada)</div>
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="sCurveChart"></canvas>
+                </div>
+                <div class="chart-explanation">
+                    <strong>P50/P80/P90:</strong> Percentuais de confiança de não estourar o orçamento indicado.
+                </div>
+            </div>
+
             <div class="chart-box" id="tornado-container">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <div class="chart-title">Análise de Sensibilidade (Risco)</div>
@@ -502,6 +512,7 @@
     Chart.defaults.color = '#64748b';
     
     let histogramInstance = null;
+    let sCurveInstance = null; // Instância para Curva S
     let tornadoInstance = null;
     let currentSort = { column: null, direction: 'asc' };
     let lastTornadoData = [];
@@ -681,6 +692,8 @@
         
         const mean = results.reduce((a,b) => a+b, 0) / numSims;
         const p10 = results[Math.floor(numSims * 0.1)];
+        const p50 = results[Math.floor(numSims * 0.5)]; // Mediana
+        const p80 = results[Math.floor(numSims * 0.8)];
         const p90 = results[Math.floor(numSims * 0.9)];
         
         document.getElementById('probMeta').innerText = ((successMetaCount / numSims) * 100).toFixed(1) + '%';
@@ -690,6 +703,7 @@
         document.getElementById('p90').innerText = formatter.format(p90);
         
         updateHistogram(results, baseCost, totalTarget);
+        updateSCurve(results, baseCost, totalTarget, p50, p80, p90); // Atualiza Curva S
         
         lastTornadoData = tornadoData;
         updateTornado(lastTornadoData);
@@ -735,6 +749,56 @@
                         label: { content: "Limite Total", enabled: true, position: "start", yAdjust: 20, font: {size: 10}, color: '#fff', backgroundColor: '#ef4444' }
                     }
                 }}}
+            }
+        });
+    }
+
+    function updateSCurve(data, baseCost, totalTarget, p50, p80, p90) {
+        const ctx = document.getElementById('sCurveChart').getContext('2d');
+        if (sCurveInstance) sCurveInstance.destroy();
+
+        // Downsampling para performance: pega 100 pontos distribuídos uniformemente
+        const points = [];
+        const sampleRate = Math.max(1, Math.floor(data.length / 100));
+        for (let i = 0; i < data.length; i += sampleRate) {
+            points.push({ x: data[i], y: (i / data.length) * 100 });
+        }
+        // Garante que o último ponto esteja lá
+        points.push({ x: data[data.length - 1], y: 100 });
+
+        sCurveInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Probabilidade Acumulada',
+                    data: points,
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 0, // Linha suave
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { type: 'linear', title: { display: true, text: 'Custo do Projeto (R$)' }, ticks: { callback: function(val) { return 'R$ ' + (val/1000).toFixed(1) + 'k'; } } },
+                    y: { min: 0, max: 100, title: { display: true, text: 'Probabilidade (%)' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (ctx) => `Prob: ${ctx.raw.y.toFixed(1)}% | Custo: R$ ${ctx.raw.x.toFixed(2)}` } },
+                    annotation: {
+                        annotations: {
+                            lineP50: { type: 'line', scaleID: 'x', value: p50, borderColor: '#94a3b8', borderWidth: 1, borderDash: [4, 4], label: { content: `P50: ${(p50/1000).toFixed(1)}k`, enabled: true, position: 'top', color: '#64748b', font: {size: 10} } },
+                            lineP80: { type: 'line', scaleID: 'x', value: p80, borderColor: '#94a3b8', borderWidth: 1, borderDash: [4, 4], label: { content: `P80: ${(p80/1000).toFixed(1)}k`, enabled: true, position: 'top', yAdjust: 20, color: '#64748b', font: {size: 10} } },
+                            lineP90: { type: 'line', scaleID: 'x', value: p90, borderColor: '#94a3b8', borderWidth: 1, borderDash: [4, 4], label: { content: `P90: ${(p90/1000).toFixed(1)}k`, enabled: true, position: 'top', yAdjust: 40, color: '#64748b', font: {size: 10} } },
+                            lineMeta: { type: 'line', scaleID: 'x', value: baseCost, borderColor: '#f59e0b', borderWidth: 2, label: { content: 'Meta', enabled: true, position: 'end', backgroundColor: '#f59e0b', color: 'white', font: {size: 10} } },
+                            lineLimit: { type: 'line', scaleID: 'x', value: totalTarget, borderColor: '#ef4444', borderWidth: 2, label: { content: 'Limite', enabled: true, position: 'end', backgroundColor: '#ef4444', color: 'white', font: {size: 10} } }
+                        }
+                    }
+                }
             }
         });
     }
